@@ -184,8 +184,8 @@ class TrainingInstance(C274):
             if w[0] == "#":
                 self.inst["label"] = w
                 # FIXME: For testing only.  Compare to previous version.
-                if inclLabel:
-                    self.inst["words"].append(w)
+                #if inclLabel:
+                 #   self.inst["words"].append(w)
             else:
                 self.inst["words"].append(w)
 
