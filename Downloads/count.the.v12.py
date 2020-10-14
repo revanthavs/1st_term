@@ -11,7 +11,7 @@ TargetWords = [
         '-40', 'jackets', 'wish', 'fog', 'pretty', 'summer'
         ]
 
-
+# newline of my input
 def open_file(filename=InputFilename):
     try:
         f = open(filename, "r")
