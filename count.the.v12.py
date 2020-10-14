@@ -10,7 +10,7 @@ TargetWords = [
         'sunny', 'windy', 'coming', 'perfect', 'need', 'sun', 'on', 'was',
         '-40', 'jackets', 'wish', 'fog', 'pretty', 'summer'
         ]
-#newline from mac
+
 
 def open_file(filename=InputFilename):
     try:
