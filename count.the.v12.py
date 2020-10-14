@@ -222,12 +222,14 @@ class TrainingSet(C274):
                 break
             assert cFlag, "Assume valid input hereafter"
 
-            # Save the training data input, by line
-            self.inObjList.append(line)
-            # Save the training data input, after parsing
-            ti = TrainingInstance()
-            ti.process_input_line(line, run=run)
-            self.inObjHash.append(ti)
+            if line[0] != "%":
+
+                # Save the training data input, by line
+                self.inObjList.append(line)
+                # Save the training data input, after parsing
+                ti = TrainingInstance()
+                ti.process_input_line(line, run=run)
+                self.inObjHash.append(ti)
         return
 
 
