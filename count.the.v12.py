@@ -11,7 +11,7 @@ TargetWords = [
         '-40', 'jackets', 'wish', 'fog', 'pretty', 'summer'
         ]
 
-# newline of my input
+
 def open_file(filename=InputFilename):
     try:
         f = open(filename, "r")
@@ -184,8 +184,8 @@ class TrainingInstance(C274):
             if w[0] == "#":
                 self.inst["label"] = w
                 # FIXME: For testing only.  Compare to previous version.
-                if inclLabel:
-                    self.inst["words"].append(w)
+                #if inclLabel:
+                 #   self.inst["words"].append(w)
             else:
                 self.inst["words"].append(w)
 
@@ -222,12 +222,14 @@ class TrainingSet(C274):
                 break
             assert cFlag, "Assume valid input hereafter"
 
-            # Save the training data input, by line
-            self.inObjList.append(line)
-            # Save the training data input, after parsing
-            ti = TrainingInstance()
-            ti.process_input_line(line, run=run)
-            self.inObjHash.append(ti)
+            if line[0] != "%":
+
+                # Save the training data input, by line
+                self.inObjList.append(line)
+                # Save the training data input, after parsing
+                ti = TrainingInstance()
+                ti.process_input_line(line, run=run)
+                self.inObjHash.append(ti)
         return
 
 

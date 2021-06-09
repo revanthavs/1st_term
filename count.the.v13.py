@@ -11,7 +11,7 @@ TargetWords = [
         '-40', 'jackets', 'wish', 'fog', 'pretty', 'summer'
         ]
 
-# newline of my input
+
 def open_file(filename=InputFilename):
     try:
         f = open(filename, "r")
@@ -69,6 +69,15 @@ class ClassifyByTarget(C274):
         self.theCount = 0
         self.nonTarget = []
         self.set_target_words(lw)
+        self.initTF()
+        return
+
+    def initTF(self):
+        self.TP = 0
+        self.FP = 0
+        self.TN = 0
+        self.FN = 0
+        return
 
     # FIXME:  Use Python properties
     #     https://www.python-course.eu/python3_properties.php
@@ -102,16 +111,60 @@ class ClassifyByTarget(C274):
         return
 
     def print_config(self):
+        print("-------- Print Config --------")
         ln = len(self.get_target_words())
         print("TargetWords Hardcoded (%d): " % ln, end='')
         print(self.get_target_words())
         return
 
     def print_run_info(self):
+        print("-------- Print Run Info --------")
         print("All words:%3s. " % self.get_allWords(), end='')
         print(" Target words:%3s" % self.get_theCount())
         print("Non-Target words (%d): " % len(self.get_nonTarget()), end='')
         print(self.get_nonTarget())
+        return
+
+    def print_confusion_matrix(self, targetLabel, doKey=False):
+        assert (self.TP + self.TP + self.FP + self.TN) > 0
+        print("-------- Confusion Matrix --------")
+        print("%10s | %13s" % ('Predict', 'Label'))
+        print("-----------+----------------------")
+        print("%10s | %10s %10s" % (' ', targetLabel, 'not'))
+        if doKey:
+            print("%10s | %10s %10s" % ('', 'TP   ', 'FP   '))
+        print("%10s | %10d %10d" % (targetLabel, self.TP, self.FP))
+        if doKey:
+            print("%10s | %10s %10s" % ('', 'FN   ', 'TN   '))
+        print("%10s | %10d %10d" % ('not', self.FN, self.TN))
+        return
+
+    def eval_training_set(self, tset, targetLabel):
+        print("-------- Evaluate Training Set --------")
+        self.initTF()
+        z = zip(tset.get_instances(), tset.get_lines())
+        for ti, w in z:
+            lb = ti.get_label()
+            cl = ti.get_class()
+            if lb == targetLabel:
+                if cl:
+                    self.TP += 1
+                    outcome = "TP"
+                else:
+                    self.FN += 1
+                    outcome = "FN"
+            else:
+                if cl:
+                    self.FP += 1
+                    outcome = "FP"
+                else:
+                    self.TN += 1
+                    outcome = "TN"
+            explain = ti.get_explain()
+            print("TW %s: ( %10s) %s" % (outcome, explain, w))
+            if Debug:
+                print("-->", ti.get_words())
+        self.print_confusion_matrix(targetLabel)
         return
 
     def classify_by_words(self, ti, update=False, tlabel="last"):
@@ -152,6 +205,7 @@ class TrainingInstance(C274):
         self.inst["class"] = ""         # Class, by classifier
         self.inst["explain"] = ""       # Explanation for classification
         self.inst["experiments"] = dict()   # Previous classifier runs
+        return
 
     def get_label(self):
         return(self.inst["label"])
@@ -168,6 +222,13 @@ class TrainingInstance(C274):
 
     def get_class_by_tag(self, tlabel):             # tlabel = tag label
         cl = self.inst["experiments"].get(tlabel)
+        if cl is None:
+            return("N/A")
+        else:
+            return(cl)
+
+    def get_explain(self):
+        cl = self.inst.get("explain")
         if cl is None:
             return("N/A")
         else:
@@ -191,7 +252,6 @@ class TrainingInstance(C274):
 
         if not (run is None):
             cl, e = run.classify(self, update=True, tlabel=tlabel)
-            # self.set_class(cl, tlabel, e)
         return(self)
 
 
@@ -202,15 +262,22 @@ class TrainingSet(C274):
         self.inObjHash = []     # Parsed lines, in dictionary/hash
         return
 
+    def get_instances(self):
+        return(self.inObjHash)      # FIXME Should protect this more
+
+    def get_lines(self):
+        return(self.inObjList)      # FIXME Should protect this more
+
     def print_training_set(self):
-        i = 0
-        while i < len(self.inObjList):
-            label = self.inObjHash[i].get_label()
-            w = self.inObjList[i]
-            print("( %10s) %s" % (label, w))
+        print("-------- Print Training Set --------")
+        z = zip(self.inObjHash, self.inObjList)
+        for ti, w in z:
+            lb = ti.get_label()
+            cl = ti.get_class_by_tag("last")     # Not used
+            explain = ti.get_explain()
+            print("( %s) (%s) %s" % (lb, explain, w))
             if Debug:
-                print("-->", self.inObjHash[i].get_words())
-            i += 1
+                print("-->", ti.get_words())
         return
 
     def process_input_stream(self, inFile, run=None):
@@ -221,6 +288,10 @@ class TrainingSet(C274):
             if not cFlag:
                 break
             assert cFlag, "Assume valid input hereafter"
+
+            # Check for comments
+            if line[0] == '%':  # Comments must start with %
+                continue
 
             # Save the training data input, by line
             self.inObjList.append(line)
@@ -251,9 +322,12 @@ def main():
             tset.process_input_stream(inFile, run1)
             inFile.close()
 
+    if True or Debug:
+        tset.print_training_set()
     run1.print_config()
-    tset.print_training_set()
     run1.print_run_info()
+    run1.eval_training_set(tset, '#weather')
+
     return
 
 
